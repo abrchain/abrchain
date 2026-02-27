@@ -1,0 +1,40 @@
+{
+    "server": {
+        "port": 3009,
+        "host": "localhost"
+    },
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "name": "abr_wallet_dev",
+        "user": "wallet_user",
+        "poolSize": 20
+    },
+    "redis": {
+        "host": "localhost",
+        "port": 6379
+    },
+    "jwt": {
+        "secret": "dev-secret-key-change-in-production",
+        "expiresIn": "7d"
+    },
+    "blockchain": {
+        "rpcUrl": "http://localhost:8332",
+        "rpcUser": "abruser",
+        "rpcPassword": "abrpwd",
+        "network": "testnet"
+    },
+    "cardService": {
+        "apiUrl": "http://localhost:3008",
+        "apiKey": "card-service-api-key"
+    },
+    "exchange": {
+        "apiUrl": "https://api.exchangerate.com",
+        "apiKey": "exchange-api-key"
+    },
+    "limits": {
+        "minSend": 0.01,
+        "maxSend": 10000,
+        "minFee": 0.001
+    }
+}

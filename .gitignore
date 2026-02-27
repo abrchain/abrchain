@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.dylib
+*.log
+
+# Environment and secrets
+.env
+.env.local
+*.conf
+!*.conf.example
+config/private/
+secrets/
+*.key
+*.pem
+*.crt
+
+# Logs and data
+*.log
+*.db
+*.sqlite
+*.sqlite3
+data/
+logs/
+backups/
+*.pid
+*.seed
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/

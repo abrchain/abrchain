@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  abr-testnet-node1:
+    build:
+      context: .
+      dockerfile: Dockerfile.abr
+    container_name: abr-testnet-1
+    hostname: node1.abr.testnet
+    volumes:
+      - ../data/testnet/node1:/root/.abrcore
+      - ../config/testnet/abr-testnet.conf:/root/.abrcore/abr.conf
+    ports:
+      - "19333:19333"
+      - "19332:19332"
+    networks:
+      abr-testnet:
+        ipv4_address: 172.20.0.2
+    command: >
+      abrd -testnet -printtoconsole
+
+  abr-testnet-node2:
+    build:
+      context: .
+      dockerfile: Dockerfile.abr
+    container_name: abr-testnet-2
+    hostname: node2.abr.testnet
+    volumes:
+      - ../data/testnet/node2:/root/.abrcore
+      - ../config/testnet/abr-testnet.conf:/root/.abrcore/abr.conf
+    ports:
+      - "19334:19333"
+      - "19333:19332"
+    networks:
+      abr-testnet:
+        ipv4_address: 172.20.0.3
+    command: >
+      abrd -testnet -printtoconsole -connect=172.20.0.2
+
+  abr-testnet-node3:
+    build:
+      context: .
+      dockerfile: Dockerfile.abr
+    container_name: abr-testnet-3
+    hostname: node3.abr.testnet
+    volumes:
+      - ../data/testnet/node3:/root/.abrcore
+      - ../config/testnet/abr-testnet.conf:/root/.abrcore/abr.conf
+    ports:
+      - "19335:19333"
+      - "19334:19332"
+    networks:
+      abr-testnet:
+        ipv4_address: 172.20.0.4
+    command: >
+      abrd -testnet -printtoconsole -connect=172.20.0.2
+
+networks:
+  abr-testnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,21 @@
+{
+    "name": "abr-wallet-services",
+    "version": "1.0.0",
+    "description": "ABR Wallet Microservices",
+    "main": "index.js",
+    "scripts": {
+        "test": "node card/test-card.js",
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "dependencies": {
+        "axios": "^1.6.0",
+        "dotenv": "^16.0.3",
+        "ws": "^8.13.0",
+        "redis": "^4.6.5",
+        "amqplib": "^0.10.3"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.22"
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "card_service": {
+        "enabled": true,
+        "bin_ranges": {
+            "classic": "9",
+            "gold": "92",
+            "platinum": "93",
+            "business": "94",
+            "virtual": "95"
+        },
+        "default_limits": {
+            "classic": {
+                "daily_spend": 1000,
+                "monthly_spend": 10000,
+                "daily_withdrawal": 500
+            },
+            "gold": {
+                "daily_spend": 5000,
+                "monthly_spend": 50000,
+                "daily_withdrawal": 2000
+            },
+            "platinum": {
+                "daily_spend": 25000,
+                "monthly_spend": 250000,
+                "daily_withdrawal": 10000
+            }
+        },
+        "fees": {
+            "annual": {
+                "classic": 0,
+                "gold": 50,
+                "platinum": 100,
+                "business": 500
+            },
+            "transaction": 0.015,
+            "atm_withdrawal": 2.50,
+            "foreign_transaction": 0.02
+        },
+        "security": {
+            "encryption_algorithm": "aes-256-gcm",
+            "pin_attempts": 3,
+            "pin_lock_duration": 900,
+            "require_cvv": true,
+            "require_3ds": true
+        },
+        "database": {
+            "host": "localhost",
+            "port": 5432,
+            "name": "abr_cards",
+            "pool_size": 20
+        }
+    }
+}
