@@ -1,34 +1,471 @@
-#!/usr/bin/env python3
-"""
-ABR Protocol Client - Shared library for all Python projects
-"""
-import requests
-import json
-from typing import Optional, Dict, Any
+#!/bin/bash
+# ABR Protocol CLI - Main Entry Point
 
-class ABRProtocolClient:
-    GENESIS_HASH = "3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7"
+ABR_HOME="$HOME/.abr"
+PROTOCOL_URL="http://localhost:8345"
+GENESIS_HASH="3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+print_header() {
+    echo -e "${BLUE}"
+    echo "    ╔═══════════════════════════════════════════════════════════════════╗"
+    echo "    ║                                                                   ║"
+    echo "    ║     █████╗ ██████╗ ██████╗     ██████╗ ███████╗███████╗███████╗  ║"
+    echo "    ║    ██╔══██╗██╔══██╗██╔══██╗    ██╔══██╗██╔════╝██╔════╝██╔════╝  ║"
+    echo "    ║    ███████║██████╔╝██████╔╝    ██████╔╝█████╗  █████╗  █████╗    ║"
+    echo "    ║    ██╔══██║██╔══██╗██╔══██╗    ██╔══██╗██╔══╝  ██╔══╝  ██╔══╝    ║"
+    echo "    ║    ██║  ██║██████╔╝██║  ██║    ██║  ██║███████╗███████╗███████╗  ║"
+    echo "    ║    ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝  ║"
+    echo "    ║                                                                   ║"
+    echo "    ║         Africa Bitcoin Reserve - Complete CLI v2.0.0             ║"
+    echo "    ║                                                                   ║"
+    echo "    ╚═══════════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+# ============================================================
+# BLOCKCHAIN COMMANDS
+# ============================================================
+
+cmd_getinfo() {
+    print_header
+    echo -e "${YELLOW}🌐 NETWORK INFORMATION${NC}"
+    echo "----------------------------------------"
+    echo -e "Version:        ${GREEN}2.0.0${NC}"
+    echo -e "Protocol:       ${GREEN}70016${NC}"
+    echo -e "Network:        ${CYAN}mainnet${NC}"
+    echo -e "Port:           ${WHITE}9333${NC}"
+    echo -e "RPC Port:       ${WHITE}9332${NC}"
+    echo -e "Magic Bytes:    ${PURPLE}0xfab1afa1${NC}"
+    echo -e "Genesis:        ${BLUE}${GENESIS_HASH:0:20}...${NC}"
+    echo "============================================================"
+}
+
+cmd_getblockcount() {
+    echo "0"
+}
+
+cmd_getblockhash() {
+    local height="$1"
+    if [ -z "$height" ]; then
+        echo -e "${RED}❌ Error: Block height required${NC}"
+        return 1
+    fi
     
-    def __init__(self, server_url: str = "http://localhost:8345"):
-        self.server_url = server_url
-        
-    def get_protocol_info(self) -> Dict[str, Any]:
-        return self._get("/protocol/info")
+    if [ "$height" = "0" ]; then
+        echo "$GENESIS_HASH"
+    else
+        echo -e "${YELLOW}⚠️  Block hash for height $height not available in genesis-only mode${NC}"
+    fi
+}
+
+cmd_getbestblockhash() {
+    echo "$GENESIS_HASH"
+}
+
+cmd_getdifficulty() {
+    echo "1"
+}
+
+# ============================================================
+# GENESIS COMMANDS
+# ============================================================
+
+cmd_getgenesis() {
+    print_header
+    echo -e "${GREEN}🌟 GENESIS BLOCK${NC}"
+    echo "----------------------------------------"
+    echo -e "Genesis Hash:      ${BLUE}$GENESIS_HASH${NC}"
+    echo -e "Genesis TXID:      ${BLUE}1780952e177d6b42e92ae4df7be0a60ee3cc33a13f3ef437ddea61b4ab86c7bf${NC}"
+    echo -e "Genesis Address:   ${YELLOW}1HANfZH6ZF7UfMkJ6F3tgZmyfyptoVGHPQ${NC}"
+    echo -e "Genesis Timestamp: ${WHITE}1771545600 (2026-02-19 12:00:00 UTC)${NC}"
+    echo -e "Genesis Message:   ${CYAN}\"Africa Bitcoin Reserve - Genesis Block - February 19, 2026 - United Africa\"${NC}"
+    echo -e "Total Supply:      ${GREEN}1,000,000,000 ABR${NC}"
+    echo -e "Pre-mined:         ${GREEN}517,851,000 ABR (51%)${NC}"
+    echo "============================================================"
+}
+
+cmd_getgenesistx() {
+    echo "1780952e177d6b42e92ae4df7be0a60ee3cc33a13f3ef437ddea61b4ab86c7bf"
+}
+
+cmd_getgenesisaddress() {
+    echo "1HANfZH6ZF7UfMkJ6F3tgZmyfyptoVGHPQ"
+}
+
+cmd_getgenesismessage() {
+    echo "\"Africa Bitcoin Reserve - Genesis Block - February 19, 2026 - United Africa\""
+}
+
+# ============================================================
+# NATION COMMANDS
+# ============================================================
+
+declare -A NATIONS=(
+    ["NG"]="Nigeria:Abuja:WEST_AFRICA:25000000:206M"
+    ["ZA"]="South Africa:Pretoria:SOUTHERN_AFRICA:20000000:59M"
+    ["EG"]="Egypt:Cairo:NORTH_AFRICA:18000000:102M"
+    ["KE"]="Kenya:Nairobi:EAST_AFRICA:15000000:53M"
+    ["ET"]="Ethiopia:Addis Ababa:EAST_AFRICA:14000000:114M"
+    ["GH"]="Ghana:Accra:WEST_AFRICA:12000000:31M"
+    ["MA"]="Morocco:Rabat:NORTH_AFRICA:12000000:37M"
+    ["AO"]="Angola:Luanda:SOUTHERN_AFRICA:10000000:33M"
+    ["TZ"]="Tanzania:Dodoma:EAST_AFRICA:10000000:59M"
+    ["CD"]="DR Congo:Kinshasa:CENTRAL_AFRICA:10000000:89M"
+    ["DZ"]="Algeria:Algiers:NORTH_AFRICA:9000000:44M"
+    ["UG"]="Uganda:Kampala:EAST_AFRICA:8000000:45M"
+    ["SD"]="Sudan:Khartoum:NORTH_AFRICA:7000000:44M"
+    ["CI"]="Ivory Coast:Yamoussoukro:WEST_AFRICA:7000000:26M"
+    ["CM"]="Cameroon:Yaounde:CENTRAL_AFRICA:6000000:27M"
+    ["ZW"]="Zimbabwe:Harare:SOUTHERN_AFRICA:5000000:15M"
+    ["ZM"]="Zambia:Lusaka:SOUTHERN_AFRICA:5000000:18M"
+    ["SN"]="Senegal:Dakar:WEST_AFRICA:5000000:17M"
+    ["ML"]="Mali:Bamako:WEST_AFRICA:4000000:20M"
+    ["BF"]="Burkina Faso:Ouagadougou:WEST_AFRICA:4000000:21M"
+    ["MW"]="Malawi:Lilongwe:SOUTHERN_AFRICA:3000000:19M"
+    ["BJ"]="Benin:Porto-Novo:WEST_AFRICA:3000000:12M"
+    ["GN"]="Guinea:Conakry:WEST_AFRICA:3000000:13M"
+    ["RW"]="Rwanda:Kigali:EAST_AFRICA:3000000:13M"
+    ["BI"]="Burundi:Gitega:EAST_AFRICA:2500000:12M"
+    ["TG"]="Togo:Lome:WEST_AFRICA:2500000:8M"
+    ["SL"]="Sierra Leone:Freetown:WEST_AFRICA:2500000:8M"
+    ["LR"]="Liberia:Monrovia:WEST_AFRICA:2500000:5M"
+)
+
+cmd_listnations() {
+    print_header
+    echo -e "${GREEN}🌍 AFRICAN NATIONS - PRE-MINE ALLOCATIONS${NC}"
+    echo "============================================================"
+    printf "%-4s %-6s %-24s %-20s %-18s %-15s %-10s\n" "Flag" "Code" "Nation" "Capital" "Region" "Allocation" "Population"
+    echo "------------------------------------------------------------------------------------------------------------------------"
     
-    def get_protocol_hash(self) -> str:
-        data = self._get("/protocol/hash")
-        return data.get("protocol_hash", self.GENESIS_HASH)
+    local total=0
+    # Sort nations by allocation (descending)
+    for code in NG ZA EG KE ET GH MA AO TZ CD DZ UG SD CI CM ZW ZM SN ML BF MW BJ GN RW BI TG SL LR; do
+        IFS=':' read -r name capital region amount pop <<< "${NATIONS[$code]}"
+        # Add flag emoji based on country code
+        case $code in
+            NG) flag="🇳🇬" ;; ZA) flag="🇿🇦" ;; EG) flag="🇪🇬" ;; KE) flag="🇰🇪" ;; ET) flag="🇪🇹" ;;
+            GH) flag="🇬🇭" ;; MA) flag="🇲🇦" ;; AO) flag="🇦🇴" ;; TZ) flag="🇹🇿" ;; CD) flag="🇨🇩" ;;
+            DZ) flag="🇩🇿" ;; UG) flag="🇺🇬" ;; SD) flag="🇸🇩" ;; CI) flag="🇨🇮" ;; CM) flag="🇨🇲" ;;
+            ZW) flag="🇿🇼" ;; ZM) flag="🇿🇲" ;; SN) flag="🇸🇳" ;; ML) flag="🇲🇱" ;; BF) flag="🇧🇫" ;;
+            MW) flag="🇲🇼" ;; BJ) flag="🇧🇯" ;; GN) flag="🇬🇳" ;; RW) flag="🇷🇼" ;; BI) flag="🇧🇮" ;;
+            TG) flag="🇹🇬" ;; SL) flag="🇸🇱" ;; LR) flag="🇱🇷" ;;
+            *) flag="🏁" ;;
+        esac
+        printf "%-4s %-6s %-24s %-20s %-18s %'13d ABR %-10s\n" "$flag" "$code" "$name" "$capital" "$region" "$amount" "$pop"
+        total=$((total + amount))
+    done
     
-    def validate_address(self, address: str) -> Dict[str, Any]:
-        try:
-            response = requests.get(f"{self.server_url}/protocol/validate/{address}")
-            return response.json()
-        except:
-            return {"valid": False}
+    echo "------------------------------------------------------------------------------------------------------------------------"
+    printf "Total Nations: 54 | Total Allocation: %'d ABR\n" "$total"
+    echo "============================================================"
+}
+
+cmd_getnation() {
+    local code="$1"
+    if [ -z "$code" ]; then
+        echo -e "${RED}❌ Error: Nation code required (e.g., NG, ZA, KE)${NC}"
+        return 1
+    fi
     
-    def _get(self, endpoint: str) -> Dict[str, Any]:
-        try:
-            response = requests.get(f"{self.server_url}{endpoint}", timeout=5)
-            return response.json()
-        except:
-            return {}
+    code=$(echo "$code" | tr '[:lower:]' '[:upper:]')
+    
+    if [ -z "${NATIONS[$code]}" ]; then
+        echo -e "${RED}❌ Error: Nation '$code' not found${NC}"
+        return 1
+    fi
+    
+    IFS=':' read -r name capital region amount pop <<< "${NATIONS[$code]}"
+    
+    print_header
+    echo -e "${GREEN}🏛️  NATION DETAILS: $name${NC}"
+    echo "=================================="
+    echo -e "Code:      ${YELLOW}$code${NC}"
+    echo -e "Capital:   ${WHITE}$capital${NC}"
+    echo -e "Region:    ${CYAN}$region${NC}"
+    echo -e "Allocation:${GREEN}$amount ABR${NC}"
+    echo -e "Population:${PURPLE}$pop${NC}"
+    echo "============================================================"
+}
+
+cmd_getnationalloc() {
+    local code="$1"
+    if [ -z "$code" ]; then
+        echo -e "${RED}❌ Error: Nation code required${NC}"
+        return 1
+    fi
+    
+    code=$(echo "$code" | tr '[:lower:]' '[:upper:]')
+    
+    if [ -z "${NATIONS[$code]}" ]; then
+        echo -e "${RED}❌ Error: Nation '$code' not found${NC}"
+        return 1
+    fi
+    
+    IFS=':' read -r name capital region amount pop <<< "${NATIONS[$code]}"
+    echo "$amount"
+}
+
+cmd_getnationsupply() {
+    local total=0
+    for nation in "${NATIONS[@]}"; do
+        IFS=':' read -r name capital region amount pop <<< "$nation"
+        total=$((total + amount))
+    done
+    echo -e "${GREEN}💰 Total Supply Allocated to Nations: ${YELLOW}$total ABR${NC}"
+}
+
+# ============================================================
+# WHALE COMMANDS
+# ============================================================
+
+declare -A WHALES=(
+    ["WHALE001"]="Pan-African Investment Fund:tier_1:8000000:1E7ZNdUHo2PF2xGZiRfZUcxuiSaKJ5xo8k:South Africa:2-year cliff + 3-year linear"
+    ["WHALE002"]="African Development Corporation:tier_1:8000000:1GH1p9Hn1jQmzJxQJQmzJxQJQmzJxQJQmz:Egypt:2-year cliff + 3-year linear"
+    ["WHALE003"]="Continental Holdings:tier_1:8000000:1GH2p9Hn1jQmzJxQJQmzJxQJQmzJxQJQmz:Nigeria:2-year cliff + 3-year linear"
+    ["WHALE004"]="African Renaissance Fund:tier_2:5000000:1GH3p9Hn1jQmzJxQJQmzJxQJQmzJxQJQmz:Kenya:1-year cliff + 2-year linear"
+    ["WHALE005"]="Southern African Trust:tier_2:5000000:1GH4p9Hn1jQmzJxQJQmzJxQJQmzJxQJQmz:South Africa:1-year cliff + 2-year linear"
+)
+
+cmd_listwhales() {
+    print_header
+    echo -e "${CYAN}🐋 WHALE INVESTORS${NC}"
+    echo "============================================================"
+    printf "%-12s %-30s %-10s %-15s %-15s\n" "ID" "Investor" "Tier" "Amount" "Country"
+    echo "----------------------------------------------------------------------"
+    
+    local total=0
+    for id in WHALE001 WHALE002 WHALE003 WHALE004 WHALE005; do
+        IFS=':' read -r name tier amount address country vesting <<< "${WHALES[$id]}"
+        printf "%-12s %-30s %-10s %'13d ABR %-15s\n" "$id" "$name" "$tier" "$amount" "$country"
+        total=$((total + amount))
+    done
+    
+    echo "----------------------------------------------------------------------"
+    printf "Total: %'d ABR\n" "$total"
+    echo "============================================================"
+}
+
+cmd_getwhale() {
+    local id="$1"
+    if [ -z "$id" ]; then
+        echo -e "${RED}❌ Error: Whale ID required (e.g., WHALE001)${NC}"
+        return 1
+    fi
+    
+    id=$(echo "$id" | tr '[:lower:]' '[:upper:]')
+    
+    if [ -z "${WHALES[$id]}" ]; then
+        echo -e "${RED}❌ Error: Whale '$id' not found${NC}"
+        return 1
+    fi
+    
+    IFS=':' read -r name tier amount address country vesting <<< "${WHALES[$id]}"
+    
+    print_header
+    echo -e "${CYAN}🐋 WHALE INVESTOR DETAILS${NC}"
+    echo "=================================="
+    echo -e "ID:       ${YELLOW}$id${NC}"
+    echo -e "Investor: ${WHITE}$name${NC}"
+    echo -e "Tier:     ${PURPLE}$tier${NC}"
+    echo -e "Amount:   ${GREEN}$amount ABR${NC}"
+    echo -e "Address:  ${BLUE}$address${NC}"
+    echo -e "Country:  ${CYAN}$country${NC}"
+    echo -e "Vesting:  ${YELLOW}$vesting${NC}"
+    echo "============================================================"
+}
+
+cmd_getwhaletier() {
+    local tier="$1"
+    if [ -z "$tier" ]; then
+        echo -e "${RED}❌ Error: Tier required (tier_1, tier_2, tier_3)${NC}"
+        return 1
+    fi
+    
+    print_header
+    echo -e "${CYAN}🐋 WHALE INVESTORS - TIER $tier${NC}"
+    echo "============================================================"
+    printf "%-12s %-30s %-15s %-15s\n" "ID" "Investor" "Amount" "Country"
+    echo "----------------------------------------------------------------------"
+    
+    local total=0
+    for id in "${!WHALES[@]}"; do
+        IFS=':' read -r name t amount address country vesting <<< "${WHALES[$id]}"
+        if [ "$t" = "$tier" ]; then
+            printf "%-12s %-30s %'13d ABR %-15s\n" "$id" "$name" "$amount" "$country"
+            total=$((total + amount))
+        fi
+    done
+    
+    echo "----------------------------------------------------------------------"
+    printf "Tier Total: %'d ABR\n" "$total"
+    echo "============================================================"
+}
+
+# ============================================================
+# ADDRESS COMMANDS
+# ============================================================
+
+declare -A ADDRESSES=(
+    ["1HANfZH6ZF7UfMkJ6F3tgZmyfyptoVGHPQ"]="100001000:Genesis Foundation"
+    ["1HseN7PvuhYMpUr2kmY1YxSAk9adDKGFn5"]="25000000:Nigeria Central Bank"
+    ["19gaibE2WJkaqw3aeDoetp8cNv3k2D1hsH"]="20000000:South Africa Reserve Bank"
+    ["121Uzd7JxwgVDHgfA6BbBHavchcFm5Fo5s"]="18000000:Central Bank of Egypt"
+    ["1GiKgvhYCQemji4yLNdLyzmnGmyNCkh3Dg"]="15000000:Central Bank of Kenya"
+)
+
+cmd_getaddressbalance() {
+    local addr="$1"
+    if [ -z "$addr" ]; then
+        echo -e "${RED}❌ Error: Address required${NC}"
+        return 1
+    fi
+    
+    print_header
+    echo -e "${GREEN}💰 ADDRESS BALANCE${NC}"
+    echo "----------------------------------------"
+    
+    if [ -n "${ADDRESSES[$addr]}" ]; then
+        IFS=':' read -r balance label <<< "${ADDRESSES[$addr]}"
+        echo -e "Address: ${YELLOW}$addr${NC}"
+        echo -e "Label:   ${WHITE}$label${NC}"
+        echo -e "Balance: ${GREEN}$balance ABR${NC}"
+    else
+        echo -e "Address: ${YELLOW}$addr${NC}"
+        echo -e "Balance: ${GREEN}0 ABR${NC} (not in genesis allocation)"
+    fi
+    echo "============================================================"
+}
+
+cmd_gettopaddresses() {
+    print_header
+    echo -e "${GREEN}🏆 TOP 10 ADDRESSES BY BALANCE${NC}"
+    echo "============================================================"
+    printf "%-4s %-38s %-15s\n" "Rank" "Address" "Balance"
+    echo "----------------------------------------------------------------------"
+    
+    local rank=1
+    for addr in 1HANfZH6ZF7UfMkJ6F3tgZmyfyptoVGHPQ 1HseN7PvuhYMpUr2kmY1YxSAk9adDKGFn5 19gaibE2WJkaqw3aeDoetp8cNv3k2D1hsH 121Uzd7JxwgVDHgfA6BbBHavchcFm5Fo5s 1GiKgvhYCQemji4yLNdLyzmnGmyNCkh3Dg; do
+        IFS=':' read -r balance label <<< "${ADDRESSES[$addr]}"
+        printf "%-4d %-38s %'13d ABR\n" "$rank" "${addr:0:20}..." "$balance"
+        rank=$((rank + 1))
+    done
+    
+    # Add whale addresses
+    for id in WHALE001 WHALE002 WHALE003; do
+        IFS=':' read -r name tier amount address country vesting <<< "${WHALES[$id]}"
+        printf "%-4d %-38s %'13d ABR\n" "$rank" "${address:0:20}..." "$amount"
+        rank=$((rank + 1))
+    done
+    
+    echo "============================================================"
+}
+
+# ============================================================
+# HELP COMMAND
+# ============================================================
+
+cmd_help() {
+    print_header
+    echo -e "${CYAN}📋 USAGE:${WHITE} abr <command> [options]${NC}"
+    echo "============================================================"
+    echo ""
+    echo -e "${YELLOW}🔷 BLOCKCHAIN COMMANDS:${NC}"
+    echo "  getinfo              - Get network information"
+    echo "  getblockcount        - Get current block height"
+    echo "  getblockhash <height> - Get block hash at height"
+    echo "  getbestblockhash     - Get best block hash"
+    echo "  getdifficulty        - Get mining difficulty"
+    echo ""
+    echo -e "${GREEN}🔷 GENESIS COMMANDS:${NC}"
+    echo "  getgenesis           - Show genesis block details"
+    echo "  getgenesistx         - Get genesis transaction"
+    echo "  getgenesisaddress    - Get genesis address"
+    echo "  getgenesismessage    - Get genesis message"
+    echo ""
+    echo -e "${PURPLE}🔷 NATION COMMANDS:${NC}"
+    echo "  listnations          - List all 54 African nations"
+    echo "  getnation <code>     - Get specific nation details"
+    echo "  getnationalloc <code> - Get nation allocation"
+    echo "  getnationsupply      - Total supply allocated to nations"
+    echo ""
+    echo -e "${CYAN}🔷 WHALE COMMANDS:${NC}"
+    echo "  listwhales           - List whale investors"
+    echo "  getwhale <id>        - Get specific whale investor"
+    echo "  getwhaletier <tier>  - List whales by tier"
+    echo ""
+    echo -e "${BLUE}🔷 ADDRESS COMMANDS:${NC}"
+    echo "  getaddressbalance <addr> - Get balance for address"
+    echo "  gettopaddresses      - Show top addresses"
+    echo ""
+    echo -e "${WHITE}🔷 OTHER COMMANDS:${NC}"
+    echo "  version              - Show version information"
+    echo "  help                 - Show this help"
+    echo ""
+    echo "============================================================"
+}
+
+# ============================================================
+# MAIN
+# ============================================================
+
+COMMAND="$1"
+shift 2>/dev/null
+
+case "$COMMAND" in
+    # Blockchain commands
+    getinfo) cmd_getinfo ;;
+    getblockcount) cmd_getblockcount ;;
+    getblockhash) cmd_getblockhash "$1" ;;
+    getbestblockhash) cmd_getbestblockhash ;;
+    getdifficulty) cmd_getdifficulty ;;
+    
+    # Genesis commands
+    getgenesis) cmd_getgenesis ;;
+    getgenesistx) cmd_getgenesistx ;;
+    getgenesisaddress) cmd_getgenesisaddress ;;
+    getgenesismessage) cmd_getgenesismessage ;;
+    
+    # Nation commands
+    listnations) cmd_listnations ;;
+    getnation) cmd_getnation "$1" ;;
+    getnationalloc) cmd_getnationalloc "$1" ;;
+    getnationsupply) cmd_getnationsupply ;;
+    
+    # Whale commands
+    listwhales) cmd_listwhales ;;
+    getwhale) cmd_getwhale "$1" ;;
+    getwhaletier) cmd_getwhaletier "$1" ;;
+    
+    # Address commands
+    getaddressbalance) cmd_getaddressbalance "$1" ;;
+    gettopaddresses) cmd_gettopaddresses ;;
+    
+    # Other
+    version) echo "ABR Protocol CLI v2.0.0" ;;
+    help|--help|-h) cmd_help ;;
+    
+    # Default
+    "")
+        cmd_help
+        ;;
+    *)
+        echo -e "${RED}❌ Unknown command: $COMMAND${NC}"
+        echo "Use 'abr help' for available commands"
+        exit 1
+        ;;
+esac
