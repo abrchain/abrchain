@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  protocol-server:
+    build:
+      context: ../..
+      dockerfile: docker/images/protocol-server/Dockerfile
+    ports:
+      - "8345:8345"
+    volumes:
+      - ../../config:/app/config:ro
+      - protocol-data:/data
+    environment:
+      - GENESIS_HASH=3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7
+    networks:
+      - abr-network
+    restart: unless-stopped
+
+  trading-engine:
+    build:
+      context: ../..
+      dockerfile: docker/images/trading-engine/Dockerfile
+    ports:
+      - "5001:5001"
+    depends_on:
+      - protocol-server
+    networks:
+      - abr-network
+    restart: unless-stopped
+
+networks:
+  abr-network:
+    driver: bridge
+
+volumes:
+  protocol-data:
