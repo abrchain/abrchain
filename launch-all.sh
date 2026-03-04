@@ -1,170 +1,300 @@
 #!/bin/bash
-# ABR Protocol - Complete Launch Script
-# For repository: abrchain/abrchain
 
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║                                                               ║"
-echo "║     🌍 ABR Protocol - Launching All Services                 ║"
-echo "║                                                               ║"
-echo "║     Genesis Hash: 3da515799179d2f8bf0fbb86167bef332ea2       ║"
-echo "║                   bbb972631922b6ca98ce64aff3a7               ║"
-echo "║                                                               ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
-echo ""
+# ABR Protocol - Complete System Launcher
+# Version: 2.0.0
+# Genesis Hash: 3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7
 
-# Color codes
+set -e
+
+# Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
-log_info() { echo -e "${BLUE}🔷 $1${NC}"; }
-log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
-log_error() { echo -e "${RED}❌ $1${NC}"; }
+# Configuration
+ABR_HOME="${HOME}/.abr"
+ABR_CONFIG="${ABR_HOME}/config.toml"
+ABR_DATA="${ABR_HOME}/data"
+ABR_LOGS="${ABR_HOME}/logs"
+GENESIS_HASH="3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7"
 
-# Function to check if port is in use
-check_port() {
-    if lsof -Pi :$1 -sTCP:LISTEN -t >/dev/null ; then
-        return 0
+# Print banner
+print_banner() {
+    echo -e "${GREEN}"
+    cat << "EOF"
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║     █████╗ ██████╗ ██████╗     ██████╗ ███████╗███████╗███████╗  ║
+║    ██╔══██╗██╔══██╗██╔══██╗    ██╔══██╗██╔════╝██╔════╝██╔════╝  ║
+║    ███████║██████╔╝██████╔╝    ██████╔╝█████╗  █████╗  █████╗    ║
+║    ██╔══██║██╔══██╗██╔══██╗    ██╔══██╗██╔══╝  ██╔══╝  ██╔══╝    ║
+║    ██║  ██║██████╔╝██║  ██║    ██║  ██║███████╗███████╗███████╗  ║
+║    ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝  ║
+║                                                                   ║
+║              AFRICA BITCOIN RESERVE - SYSTEM LAUNCHER            ║
+║                         v2.0.0 - IMMUTABLE                       ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+EOF
+    echo -e "${NC}"
+    echo -e "${BLUE}Genesis Hash: ${GENESIS_HASH}${NC}"
+    echo -e "${BLUE}Launch Date: 2026-03-03${NC}"
+    echo ""
+}
+
+# Check prerequisites
+check_prerequisites() {
+    echo -e "${YELLOW}🔍 Checking prerequisites...${NC}"
+    
+    # Check Python
+    if ! command -v python3 &> /dev/null; then
+        echo -e "${RED}❌ Python 3 not found${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Python $(python3 --version)${NC}"
+    
+    # Check pip
+    if ! command -v pip3 &> /dev/null; then
+        echo -e "${RED}❌ pip3 not found${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ pip3 found${NC}"
+    
+    # Check Node.js (optional)
+    if command -v node &> /dev/null; then
+        echo -e "${GREEN}✅ Node.js $(node --version)${NC}"
     else
-        return 1
+        echo -e "${YELLOW}⚠️ Node.js not found (optional for mobile app)${NC}"
+    fi
+    
+    # Check Docker (optional)
+    if command -v docker &> /dev/null; then
+        echo -e "${GREEN}✅ Docker $(docker --version | cut -d ' ' -f3 | sed 's/,//')${NC}"
+    else
+        echo -e "${YELLOW}⚠️ Docker not found (optional)${NC}"
     fi
 }
 
-# Kill any existing processes on our ports
-log_info "Cleaning up existing processes..."
-pkill -f python3 || true
-sleep 2
-
-# Start Protocol Server from core
-log_info "Starting Protocol Server from core..."
-if [ -d "core" ]; then
-    cd core
+# Setup directories
+setup_directories() {
+    echo -e "\n${YELLOW}📁 Setting up directories...${NC}"
     
-    # Look for the main server file
-    if [ -f "protocol_server.py" ]; then
-        python3 protocol_server.py > /tmp/protocol.log 2>&1 &
-        PROTOCOL_PID=$!
-        log_success "Protocol Server started (PID: $PROTOCOL_PID) on port 8345"
-    elif [ -f "src/protocol_server.py" ]; then
-        cd src
-        python3 protocol_server.py > /tmp/protocol.log 2>&1 &
-        PROTOCOL_PID=$!
-        log_success "Protocol Server started (PID: $PROTOCOL_PID) on port 8345"
-        cd ..
-    else
-        # Create a simple protocol server if it doesn't exist
-        log_warning "Protocol server not found, creating minimal server..."
-        cat > protocol_server.py << 'PYEOF'
-#!/usr/bin/env python3
-from flask import Flask, jsonify
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)
-
-GENESIS_HASH = "3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7"
-
-@app.route('/protocol/info', methods=['GET'])
-def get_info():
-    return jsonify({
-        "version": 1,
-        "network": "mainnet",
-        "total_supply": 1000000000,
-        "genesis_supply": 517851000,
-        "protocol_hash": GENESIS_HASH,
-        "immutable": True,
-        "block_time": 120,
-        "genesis_message": "United Africa in the Blockchain"
-    })
-
-@app.route('/protocol/hash', methods=['GET'])
-def get_hash():
-    return jsonify({"protocol_hash": GENESIS_HASH})
-
-@app.route('/protocol/summary', methods=['GET'])
-def get_summary():
-    return jsonify({
-        "total_supply": 1000000000,
-        "genesis_supply": 517851000,
-        "mining_reserve": 482149000,
-        "foundation_allocation": 10000000,
-        "central_banks_allocation": 400000000,
-        "whales_allocation": 107851000
-    })
-
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({"status": "healthy", "protocol_hash": GENESIS_HASH})
-
-if __name__ == '__main__':
-    print(f"Starting Protocol Server with Genesis: {GENESIS_HASH}")
-    app.run(host='0.0.0.0', port=8345, debug=True)
-PYEOF
-        python3 protocol_server.py > /tmp/protocol.log 2>&1 &
-        PROTOCOL_PID=$!
-        log_success "Protocol Server created and started (PID: $PROTOCOL_PID) on port 8345"
-    fi
-    cd ..
-fi
-sleep 3
-
-# Start Trading Engine
-log_info "Starting Trading Engine..."
-if [ -d "trading-engine" ]; then
-    cd trading-engine
+    mkdir -p "${ABR_HOME}"
+    mkdir -p "${ABR_DATA}"
+    mkdir -p "${ABR_LOGS}"
+    mkdir -p "${ABR_DATA}/blocks"
+    mkdir -p "${ABR_DATA}/chainstate"
+    mkdir -p "${ABR_DATA}/index"
     
-    if [ -f "trading_engine.py" ]; then
-        python3 trading_engine.py > /tmp/trading.log 2>&1 &
-        TRADING_PID=$!
-        log_success "Trading Engine started (PID: $TRADING_PID) on port 5001"
-    elif [ -f "src/trading_engine.py" ]; then
-        cd src
-        python3 trading_engine.py > /tmp/trading.log 2>&1 &
-        TRADING_PID=$!
-        log_success "Trading Engine started (PID: $TRADING_PID) on port 5001"
-        cd ..
+    echo -e "${GREEN}✅ Created directories in ${ABR_HOME}${NC}"
+}
+
+# Install dependencies
+install_dependencies() {
+    echo -e "\n${YELLOW}📦 Installing dependencies...${NC}"
+    
+    pip3 install -r requirements.txt
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Python dependencies installed${NC}"
     else
-        log_warning "Trading Engine not found, skipping..."
+        echo -e "${RED}❌ Failed to install dependencies${NC}"
+        exit 1
     fi
-    cd ..
-fi
-
-# Start Wallet API
-log_info "Checking Wallet service..."
-if [ -d "wallet" ]; then
-    cd wallet
-    if [ -f "wallet_api.py" ]; then
-        python3 wallet_api.py > /tmp/wallet.log 2>&1 &
-        WALLET_PID=$!
-        log_success "Wallet API started (PID: $WALLET_PID)"
-    elif [ -d "services" ] && [ -f "services/wallet_api.py" ]; then
-        cd services
-        python3 wallet_api.py > /tmp/wallet.log 2>&1 &
-        WALLET_PID=$!
-        log_success "Wallet API started (PID: $WALLET_PID)"
-        cd ..
+    
+    # Install development dependencies if in dev mode
+    if [ "$1" == "--dev" ]; then
+        pip3 install -r requirements-dev.txt
+        echo -e "${GREEN}✅ Development dependencies installed${NC}"
     fi
-    cd ..
-fi
+}
 
-echo ""
-log_success "🎉 All services started successfully!"
-echo ""
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║                     ACCESS POINTS                             ║"
-echo "╠═══════════════════════════════════════════════════════════════╣"
-echo "║  Protocol Server: http://localhost:8345/protocol/info        ║"
-echo "║  Trading Engine:  http://localhost:5001/api/v1/info          ║"
-echo "║  Genesis Hash:    3da515799179d2f8bf0fbb86167bef332ea2       ║"
-echo "║                   bbb972631922b6ca98ce64aff3a7               ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
-echo ""
-echo "Log files:"
-echo "  tail -f /tmp/protocol.log"
-echo "  tail -f /tmp/trading.log"
-echo "  tail -f /tmp/wallet.log"
+# Verify genesis block
+verify_genesis() {
+    echo -e "\n${YELLOW}🔒 Verifying genesis block...${NC}"
+    
+    python3 verify_genesis.py
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Genesis block verified${NC}"
+    else
+        echo -e "${RED}❌ Genesis verification failed${NC}"
+        exit 1
+    fi
+}
 
-echo "To stop all services: pkill -f python3"
+# Start core blockchain
+start_core() {
+    echo -e "\n${YELLOW}⛓️  Starting ABR Core blockchain...${NC}"
+    
+    python3 core/blockchain.py --config "${ABR_CONFIG}" --data-dir "${ABR_DATA}" &
+    CORE_PID=$!
+    echo $CORE_PID > "${ABR_HOME}/core.pid"
+    echo -e "${GREEN}✅ Core started (PID: ${CORE_PID})${NC}"
+}
+
+# Start API server
+start_api() {
+    echo -e "\n${YELLOW}🌐 Starting API server...${NC}"
+    
+    python3 abr_api_server.py &
+    API_PID=$!
+    echo $API_PID > "${ABR_HOME}/api.pid"
+    echo -e "${GREEN}✅ API server started (PID: ${API_PID}) on port 8332${NC}"
+}
+
+# Start trading engine
+start_trading() {
+    echo -e "\n${YELLOW}📊 Starting Trading Engine...${NC}"
+    
+    python3 trading-engine/engine.py &
+    TRADING_PID=$!
+    echo $TRADING_PID > "${ABR_HOME}/trading.pid"
+    echo -e "${GREEN}✅ Trading Engine started (PID: ${TRADING_PID})${NC}"
+}
+
+# Check status
+check_status() {
+    echo -e "\n${YELLOW}📊 System Status:${NC}"
+    
+    if [ -f "${ABR_HOME}/core.pid" ]; then
+        CORE_PID=$(cat "${ABR_HOME}/core.pid")
+        if kill -0 $CORE_PID 2>/dev/null; then
+            echo -e "${GREEN}✅ Core: Running (PID: ${CORE_PID})${NC}"
+        else
+            echo -e "${RED}❌ Core: Not running${NC}"
+        fi
+    else
+        echo -e "${RED}❌ Core: Not started${NC}"
+    fi
+    
+    if [ -f "${ABR_HOME}/api.pid" ]; then
+        API_PID=$(cat "${ABR_HOME}/api.pid")
+        if kill -0 $API_PID 2>/dev/null; then
+            echo -e "${GREEN}✅ API: Running (PID: ${API_PID})${NC}"
+        else
+            echo -e "${RED}❌ API: Not running${NC}"
+        fi
+    else
+        echo -e "${RED}❌ API: Not started${NC}"
+    fi
+    
+    if [ -f "${ABR_HOME}/trading.pid" ]; then
+        TRADING_PID=$(cat "${ABR_HOME}/trading.pid")
+        if kill -0 $TRADING_PID 2>/dev/null; then
+            echo -e "${GREEN}✅ Trading Engine: Running (PID: ${TRADING_PID})${NC}"
+        else
+            echo -e "${RED}❌ Trading Engine: Not running${NC}"
+        fi
+    else
+        echo -e "${RED}❌ Trading Engine: Not started${NC}"
+    fi
+}
+
+# Stop all services
+stop_services() {
+    echo -e "\n${YELLOW}🛑 Stopping services...${NC}"
+    
+    if [ -f "${ABR_HOME}/core.pid" ]; then
+        kill $(cat "${ABR_HOME}/core.pid") 2>/dev/null || true
+        rm "${ABR_HOME}/core.pid"
+        echo -e "${GREEN}✅ Core stopped${NC}"
+    fi
+    
+    if [ -f "${ABR_HOME}/api.pid" ]; then
+        kill $(cat "${ABR_HOME}/api.pid") 2>/dev/null || true
+        rm "${ABR_HOME}/api.pid"
+        echo -e "${GREEN}✅ API stopped${NC}"
+    fi
+    
+    if [ -f "${ABR_HOME}/trading.pid" ]; then
+        kill $(cat "${ABR_HOME}/trading.pid") 2>/dev/null || true
+        rm "${ABR_HOME}/trading.pid"
+        echo -e "${GREEN}✅ Trading Engine stopped${NC}"
+    fi
+}
+
+# Show logs
+show_logs() {
+    local service=$1
+    case $service in
+        core)
+            tail -f "${ABR_LOGS}/core.log"
+            ;;
+        api)
+            tail -f "${ABR_LOGS}/api.log"
+            ;;
+        trading)
+            tail -f "${ABR_LOGS}/trading.log"
+            ;;
+        all)
+            tail -f "${ABR_LOGS}"/*.log
+            ;;
+        *)
+            echo -e "${RED}Usage: $0 logs [core|api|trading|all]${NC}"
+            exit 1
+            ;;
+    esac
+}
+
+# Main function
+main() {
+    print_banner
+    
+    case "$1" in
+        start)
+            check_prerequisites
+            setup_directories
+            install_dependencies "$2"
+            verify_genesis
+            start_core
+            sleep 2
+            start_api
+            sleep 1
+            start_trading
+            echo -e "\n${GREEN}✅ ABR Protocol started successfully!${NC}"
+            check_status
+            ;;
+        stop)
+            stop_services
+            echo -e "\n${GREEN}✅ ABR Protocol stopped${NC}"
+            ;;
+        restart)
+            stop_services
+            sleep 2
+            exec $0 start
+            ;;
+        status)
+            check_status
+            ;;
+        logs)
+            show_logs "$2"
+            ;;
+        verify)
+            verify_genesis
+            ;;
+        init)
+            check_prerequisites
+            setup_directories
+            install_dependencies
+            verify_genesis
+            echo -e "\n${GREEN}✅ Initialization complete! Run '$0 start' to launch${NC}"
+            ;;
+        help|*)
+            echo "Usage: $0 {start|stop|restart|status|logs|verify|init|help} [options]"
+            echo ""
+            echo "Commands:"
+            echo "  start [--dev]   Start all services"
+            echo "  stop            Stop all services"
+            echo "  restart         Restart all services"
+            echo "  status          Check service status"
+            echo "  logs [service]  Show logs (core|api|trading|all)"
+            echo "  verify          Verify genesis block"
+            echo "  init            Initialize directories and install dependencies"
+            echo "  help            Show this help"
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"
