@@ -1,0 +1,57 @@
+# ABR Protocol - Python Dependencies
+# Version: 2.0.0
+# Genesis Hash: 3da515799179d2f8bf0fbb86167bef332ea2bbb972631922b6ca98ce64aff3a7
+
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+aiofiles==23.2.1
+python-multipart==0.0.6
+httpx==0.25.1
+
+# Blockchain
+cryptography==41.0.7
+coincurve==19.0.1
+base58==2.1.1
+bech32==1.2.0
+
+# Database
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+alembic==1.12.1
+
+# Trading engine
+pandas==2.1.3
+numpy==1.26.2
+redis==5.0.1
+
+# WebSocket
+websockets==12.0
+
+# Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
+click==8.1.7
+tqdm==4.66.1
+colorama==0.4.6
+
+# API Documentation
+markdown==3.5.1
+jinja2==3.1.2
+
+# Monitoring
+prometheus-client==0.19.0
+psutil==5.9.6
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+hypothesis==6.92.1
+
+# Development
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1
+isort==5.13.1
