@@ -1,40 +1,26 @@
-# Dependencies
-node_modules/
-package-lock.json
-yarn.lock
-
-# Build outputs
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pythonenv*
+*.egg-info/
 dist/
 build/
-*.o
-*.a
-*.so
-*.dll
-*.exe
-*.dylib
-*.log
+*.egg
 
-# Environment and secrets
+# Virtual Environment
+venv/
+env/
 .env
-.env.local
-*.conf
-!*.conf.example
-config/private/
-secrets/
-*.key
-*.pem
-*.crt
-
-# Logs and data
-*.log
-*.db
-*.sqlite
-*.sqlite3
-data/
-logs/
-backups/
-*.pid
-*.seed
+.venv
+virtualenv/
 
 # IDE
 .vscode/
@@ -43,7 +29,69 @@ backups/
 *.swo
 *~
 .DS_Store
-Thumbs.db
+
+# Project specific
+abrchain/data/
+abrchain/logs/
+*.pid
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration
+config/local/
+config/*.local.conf
+*.secret
+secrets/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+*.cover
+.hypothesis/
+
+# Distribution
+*.tar.gz
+*.whl
+*.egg
+
+# Docker
+*.docker-cache
+docker-compose.override.yml
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Mobile app
+abr-mobile-app/node_modules/
+abr-mobile-app/android/
+abr-mobile-app/ios/
+abr-mobile-app/.gradle/
+abr-mobile-app/local.properties
+
+# Secrets
+*.key
+*.pem
+*.crt
+*.keystore
+*.jks
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
 
 # OS generated files
 .DS_Store
@@ -52,11 +100,4 @@ Thumbs.db
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-
-# Python
-__pycache__/
-*.pyc
-.coverage
-htmlcov/
-.tox/
-.pytest_cache/
+Thumbs.db
